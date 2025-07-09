@@ -1,0 +1,5 @@
+int x = 5;
+out > "x is " > 5;
+in < x;
+int y = 1;
+int z = x + y;

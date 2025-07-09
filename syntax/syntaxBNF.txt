@@ -1,0 +1,43 @@
+<program>         ::= <statement>*
+
+<statement>       ::= <var_decl>
+                    | <print_stmt>
+                    | <input_stmt>
+                    | <if_stmt>
+                    | <loop_stmt>
+                    | <expression_stmt>
+
+<var_decl>        ::= <type> <identifier> "=" <expression> ";"
+
+<print_stmt>      ::= "out" ">" <identifier> ";"
+                    | "out" ">" <string> ";"
+
+<input_stmt>      ::= "in" "<" <identifier> ";"
+
+<if_stmt>         ::= "if" "(" <expression> ")" "{" <statement>* "}"
+                    | "if" "(" <expression> ")" "{" <statement>* "}" <elif_clauses> <else_clause>?
+
+<elif_clauses>    ::= "elif" "(" <expression> ")" "{" <statement>* "}" <elif_clauses>?
+<else_clause>     ::= "else" "{" <statement>* "}"
+
+<loop_stmt>       ::= "repeat" <number> "{" <statement>* "}"
+
+<expression_stmt> ::= <expression> ";"
+
+<expression>      ::= <logical_or>
+
+<logical_or>      ::= <logical_and> { "or" <logical_and> }
+<logical_and>     ::= <equality> { "and" <equality> }
+<equality>        ::= <comparison> { ("==" | "!=") <comparison> }
+<comparison>      ::= <term> { ("<" | ">" | "<=" | ">=") <term> }
+<term>            ::= <factor> { ("+" | "-") <factor> }
+<factor>          ::= <unary> { ("*" | "/" | "mod") <unary> }
+<unary>           ::= ("+" | "-" | "not") <unary> | <primary>
+<primary>         ::= <number> | <identifier> | <string> | "(" <expression> ")"
+
+<type>            ::= "int" | "double" | "string" | "bool"
+<identifier> ::= (<letter> | "_") (<letter> | <digit> | "_")*
+<letter>     ::= "a".."z" | "A".."Z"
+<digit>      ::= "0".."9"
+<number>          ::= <digit>+
+<string>          ::= "\"" { any character except "\"" } "\""
