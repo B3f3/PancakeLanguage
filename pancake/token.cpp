@@ -11,7 +11,10 @@ Token::Token(TokenType t, const std::string& v, int l, int c)
 Token::~Token(){}
 
 void Token::debug() const {
-        std::cout << "Token(" << static_cast<int>(type)
+        std::cout << "Token(" 
+        << "type ["
+        << static_cast<int>(type)
+        << "]"
         << ", \"" << value
         << "\", line " << line
         << ", col " << column << ")\n";

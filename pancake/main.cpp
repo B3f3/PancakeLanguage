@@ -1,6 +1,7 @@
 #include "tokeniser.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 
 // Function prototypes
@@ -83,18 +84,14 @@ void runFile(const std::string& filename) {
         return;
     }
 
-    std::string line;
-    int i = 0;
-    while (std::getline(file, line)) {
-        // TODO: parse and execute each line here
-        std::cout << "line " << i << ": " << line << "\n";
-        i++;
+    std::ostringstream buffer;
+    buffer << file.rdbuf();
+    std::string fullSource = buffer.str();
 
-        Tokeniser lexer(line);
-        lexer.tokenize();  // Fills the tokens list
+    Tokeniser lexer(fullSource);
+    lexer.tokenize();
 
-        for (const Token& t : lexer.getTokens()) {
-            t.debug();
-        }
+    for (const Token& t : lexer.getTokens()) {
+        t.debug();
     }
 }

@@ -37,6 +37,8 @@
         GT,         // >
         LTE,        // <=
         GTE,        // >=
+        ARROWF,     // ->
+        ARROWB,     // <-
         AND,
         OR,
         NOT,
