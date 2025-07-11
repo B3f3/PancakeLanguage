@@ -1,4 +1,4 @@
-#include "tokeniser.h"
+#include "./headers/tokeniser.h"
 #include <cctype>
 #include <iostream>
 
@@ -78,7 +78,6 @@ Token Tokeniser::makeIdentifierOrKeyword() {
     if (value == "if") return Token(TokenType::IF, value, line, startCol);
     if (value == "elif") return Token(TokenType::ELIF, value, line, startCol);
     if (value == "else") return Token(TokenType::ELSE, value, line, startCol);
-    if (value == "repeat") return Token(TokenType::REPEAT, value, line, startCol);
     if (value == "mod") return Token(TokenType::MODULO, value, line, startCol);
     if (value == "int") return Token(TokenType::TYPE_INT, value, line, startCol);
     if (value == "double") return Token(TokenType::TYPE_DOUBLE, value, line, startCol);
