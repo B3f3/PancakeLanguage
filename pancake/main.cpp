@@ -1,4 +1,5 @@
 #include "./headers/tokeniser.h"
+#include "./headers/parser.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -72,6 +73,9 @@ void runConsole() {
         for (const Token& t : lexer.getTokens()) {
             t.debug();
         }
+
+        Parser parser(lexer.getTokens());
+        auto ast = parser.parse();
 
 
     }
