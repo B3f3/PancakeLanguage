@@ -11,6 +11,10 @@ class Literal : public Expressions {
     public:
         std::string value;
         explicit Literal(const std::string& val) : value(val) {}
+
+        void debugPrint(int indent = 0) const override {
+            std::cout << std::string(indent, ' ') << "Literal(" << value << ")\n";
+        }
 };
 
 

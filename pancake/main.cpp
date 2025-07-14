@@ -64,18 +64,29 @@ void runConsole() {
             continue;
         }
 
-        // TODO: parse and evaluate `line`
-        std::cout << "Line in: " << line << "\n";
+        try
+        {
+            // TODO: parse and evaluate `line`
+            std::cout << "Line in: " << line << "\n";
 
-        Tokeniser lexer(line);
-        lexer.tokenize();  // Fills the tokens list
+            Tokeniser lexer(line);
+            lexer.tokenize();  // Fills the tokens list
 
-        for (const Token& t : lexer.getTokens()) {
-            t.debug();
+            for (const Token& t : lexer.getTokens()) {
+                t.debug();
+            }
+
+            Parser parser(lexer.getTokens());
+            auto ast = parser.parse();
+
+            for (const auto& Statements : ast) {
+                Statements->debugPrint();
+            }
         }
-
-        Parser parser(lexer.getTokens());
-        auto ast = parser.parse();
+        catch(const std::exception& e)
+        {
+            std::cerr << "Syntax Error: " << e.what() << '\n';
+        }
 
 
     }

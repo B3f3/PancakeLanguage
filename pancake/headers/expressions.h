@@ -8,6 +8,7 @@
 class Expressions : public ASTNodes {        
     public:
         virtual ~Expressions() = default;
+        virtual void debugPrint(int indent = 0) const = 0;  // ← Add this
 };
 
 

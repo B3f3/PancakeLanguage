@@ -15,6 +15,12 @@ class BinExpr : public Expressions {
 
         BinExpr(std::string op, std::unique_ptr<Expressions> left, std::unique_ptr<Expressions> right) 
             : op(std::move(op)), left(std::move(left)), right(std::move(right)) {}
+
+        void debugPrint(int indent = 0) const override {
+            std::cout << std::string(indent, ' ') << "BinExpr(" << op << ")\n";
+            left->debugPrint(indent + 2);
+            right->debugPrint(indent + 2);
+        }
 };
 
 

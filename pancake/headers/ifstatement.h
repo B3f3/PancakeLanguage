@@ -1,5 +1,5 @@
-#ifndef OUTSTATEMENT_H
-#define OUTSTATEMENT_H
+#ifndef IFSTATEMENT_H
+#define IFSTATEMENT_H
 
 #include <string>
 #include <vector>
@@ -19,7 +19,37 @@ public:
         : condition(std::move(cond)),
           elifBranches(std::move(elifBranches)),
           elseBranch(std::move(elseBranch)) {}
+
+    void debugPrint(int indent = 0) const override {
+    std::string ind(indent, ' ');
+    std::cout << ind << "IfStatement:\n";
+
+    std::cout << ind << "  Condition:\n";
+    condition->debugPrint(indent + 4);
+
+    std::cout << ind << "  If block:\n";
+    for (const auto& stmt : elseBranch) {
+        stmt->debugPrint(indent + 4);
+    }
+
+    for (const auto& [elifCond, elifStmts] : elifBranches) {
+        std::cout << ind << "  ElseIf condition:\n";
+        elifCond->debugPrint(indent + 4);
+        std::cout << ind << "  ElseIf block:\n";
+        for (const auto& stmt : elifStmts) {
+            stmt->debugPrint(indent + 4);
+        }
+    }
+
+    if (!elseBranch.empty()) {
+        std::cout << ind << "  Else block:\n";
+        for (const auto& stmt : elseBranch) {
+            stmt->debugPrint(indent + 4);
+        }
+    }
+}
+
 };
 
 
-#endif //OUTSTATEMENT_H
+#endif //IFSTATEMENT_H

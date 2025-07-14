@@ -7,6 +7,7 @@
 class ASTNodes {        
     public:
         virtual ~ASTNodes() = default;
+        
 };
 
 #endif //ASTNODES_H
