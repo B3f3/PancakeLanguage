@@ -6,6 +6,7 @@
 #include "token.h"      // for Token
 #include "statements.h" // for Statements and subclasses
 #include "expressions.h"// for Expressions and subclasses
+#include "typechecker.h"
 
 class Parser
 {
@@ -19,6 +20,7 @@ private:
     std::unique_ptr<Statements> parseOut();
     std::unique_ptr<Statements> parseIn();
     std::unique_ptr<Statements> parseIf();
+    std::unique_ptr<Statements> parseExpressionStatement();
 
     //Expression core functions
     std::unique_ptr<Expressions> parseExpression();
@@ -34,10 +36,14 @@ private:
     bool isAtEnd() const;
     void consume(TokenType type, const std::string& errorMsg);
     int getPrecedence(const Token& tok);
+    Token peekNext() const;
+    [[noreturn]] void error(const Token& token, const std::string& message) const;
 
+    std::unordered_map<std::string, std::string> variableTypes;
+    TypeChecker& typeChecker;
 public:
     std::vector<std::unique_ptr<Statements>> parse();
-    explicit Parser(const std::vector<Token>& tokens);
+    Parser(const std::vector<Token>& tokens, TypeChecker& typeChecker);
     
 };
 
