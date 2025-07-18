@@ -1,5 +1,0 @@
-TODO: 
-1. Add Tokeniser
-    1.1 Token Class
-2. Add Parser
-3.Add Executer

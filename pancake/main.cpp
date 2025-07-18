@@ -1,5 +1,6 @@
 #include "./headers/tokeniser.h"
 #include "./headers/parser.h"
+#include "./headers/interpreter.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -56,6 +57,8 @@ void runConsole() {
 
     std::string line;
     TypeChecker checker;
+    Interpreter interpreter;
+
     while (true) {
         std::cout << "pan -> ";
         std::getline(std::cin, line);
@@ -67,26 +70,32 @@ void runConsole() {
 
         try
         {
-            // TODO: parse and evaluate `line`
-            std::cout << "=== Line in ===: " << line << "\n==============\n";
+            //std::cout << "=== Line in ===: " << line << "\n==============\n"; // The clean debug line just uncomment the code to use
 
             Tokeniser lexer(line);
             lexer.tokenize();  // Fills the tokens list
             
+            /*
             std::cout << "=== Tokens ===\n";
             for (const Token& t : lexer.getTokens()) {
                 t.debug();
             }
-            std::cout << "==============\n";
+            std::cout << "==============\n"; */ //The clean debug lines just uncomment the code to use
 
             Parser parser(lexer.getTokens(), checker);
             auto ast = parser.parse();
 
+            /*
             std::cout << "=== AST ===\n";
             for (const auto& stmt : ast) {
                 stmt->debugPrint();
             }
-            std::cout << "==========\n";
+            std::cout << "==============\n";
+
+            std::cout << "=== Result ===\n"; */ //The clean debug lines just uncomment the code to use
+            
+            interpreter.execute(ast);
+            
         }
         catch(const std::exception& e)
         {
@@ -98,44 +107,30 @@ void runConsole() {
 
 void runFile(const std::string& filename) {
     std::ifstream file(filename);
-    TypeChecker checker;
-    
     if (!file) {
         std::cerr << "Error: Could not open file '" << filename << "'\n";
         return;
     }
 
+    TypeChecker checker;
+    Interpreter interpreter;
+    
     try {
-        // Read entire file
         std::ostringstream buffer;
         buffer << file.rdbuf();
         std::string fullSource = buffer.str();
 
-        std::cout << "=== Source ===\n" << fullSource << "\n==============\n";
-
-        // Tokenize
         Tokeniser lexer(fullSource);
         lexer.tokenize();
 
-        // Debug print tokens
-        std::cout << "=== Tokens ===\n";
-        for (const Token& t : lexer.getTokens()) {
-            t.debug();
-        }
-        std::cout << "==============\n";
-
-        // Parse
         Parser parser(lexer.getTokens(), checker);
         auto ast = parser.parse();
 
-        // Execute (debug print)
-        std::cout << "=== AST ===\n";
-        for (const auto& stmt : ast) {
-            stmt->debugPrint();
-        }
-        std::cout << "==========\n";
+        std::cout << "=== Program Output ===" << std::endl;
+        interpreter.execute(ast);
+        std::cout << "=== Execution Complete ===" << std::endl;
 
     } catch (const std::exception& e) {
-        std::cerr << "Error in " << filename << ": " << e.what() << '\n';
+        std::cerr << "Error: " << e.what() << '\n';
     }
 }

@@ -1,4 +1,12 @@
-let int x = 5;
-let int x = 5;
-let int z = x + y;
+let int x = 0;
+let int y = 0;
+let int z = 0;
+out -> "enter a number: ";
+in <- x;
 
+out -> "enter another number: ";
+in <- y;
+
+z = x+y;
+
+out -> x -> "+" -> y -> "=" -> z;

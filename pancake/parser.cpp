@@ -36,10 +36,11 @@ std::vector<std::unique_ptr<Statements>> Parser::parse() {
 
 std::unique_ptr<Statements> Parser::parseStatement() {
     // Skip any empty lines
-    while (match(TokenType::END_OF_LINE)) {
-        // Just consume the empty lines
+    while (match(TokenType::END_OF_LINE)) {}
+    
+    if (isAtEnd() || check(TokenType::RBRACE)) {
+        return nullptr;  // Return null for EOF or closing brace
     }
-    if (isAtEnd()) return nullptr;  // Return null if we're at EOF
     
     // Handle actual statements
     if (check(TokenType::LET)) return parseVarDecl();

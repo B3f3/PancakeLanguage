@@ -13,7 +13,7 @@ allow "//" for single line
 num operator num; | var operator var;
 
 //variable definition
-type name = value;
+let type name = value;
 type -> [int, double, string, bool]
 name -> //Must start with a letter or underscore (a-z, A-Z, _) Followed by letters, digits, or underscores
 

@@ -7,7 +7,7 @@
                     | <loop_stmt>
                     | <expression_stmt>
 
-<var_decl>        ::= <type> <identifier> "=" <expression> ";"
+<var_decl>        ::= <let> <type> <identifier> "=" <expression> ";"
 
 <print_stmt>      ::= "out" ">" <identifier> ";"
                     | "out" ">" <string> ";"
