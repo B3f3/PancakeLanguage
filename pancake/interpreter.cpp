@@ -33,7 +33,7 @@ void Interpreter::executeStatement(const Statements* stmt) {
     else if (auto* o = dynamic_cast<const OutStatement*>(stmt)) handleOut(o);
     else if (auto* i = dynamic_cast<const InStatement*>(stmt)) handleIn(i);
     else if (auto* f = dynamic_cast<const IfStatement*>(stmt)) handleIf(f);
-    else throw std::runtime_error("Unknown statement during execution.");
+    else runtimeError(stmt, "Unknown statement during execution");
 }
 
 
@@ -42,11 +42,14 @@ std::any Interpreter::evaluateExpression(const Expressions* expr) {
     if (auto* v = dynamic_cast<const VarExpr*>(expr)) return evaluateVarExpr(v);
     if (auto* b = dynamic_cast<const BinExpr*>(expr)) return evaluateBinExpr(b);
     
-    throw std::runtime_error("Unknown expression type.");
+    runtimeError(expr, "Unknown expression type.");
 }
 
 
 void Interpreter::handleVarDecl(const VarDecl* stmt) {
+    if (variables.find(stmt->name) != variables.end()) {
+        runtimeError(stmt, "Variable already declared: " + stmt->name);
+    }
     std::any value = evaluateExpression(stmt->value.get());
     variables[stmt->name] = value;
 }
@@ -54,7 +57,7 @@ void Interpreter::handleVarDecl(const VarDecl* stmt) {
 
 void Interpreter::handleAssignment(const Assignment* stmt) {
     if (variables.find(stmt->name) == variables.end()) {
-        throw std::runtime_error("Assignment to undeclared variable: " + stmt->name);
+        runtimeError(stmt, "Assignment to undeclared variable: " + stmt->name);
     }
     variables[stmt->name] = evaluateExpression(stmt->value.get());
 }
@@ -74,9 +77,32 @@ void Interpreter::handleOut(const OutStatement* stmt) {
 
 
 void Interpreter::handleIn(const InStatement* stmt) {
+    // Check if we have predefined input (for file mode)
+    if (!inputQueue.empty()) {
+        variables[stmt->varName] = inputQueue.front();
+        inputQueue.pop();
+        return;
+    }
+    
+    // Interactive mode
     std::string input;
-    std::getline(std::cin, input);
-    variables[stmt->varName] = input;  // You can cast to other types later
+    if (!std::getline(std::cin, input)) {
+        runtimeError(stmt, "Failed to read input");
+    }
+    
+    // Convert based on variable type if known
+    if (variables.count(stmt->varName)) {
+        auto& var = variables[stmt->varName];
+        if (var.type() == typeid(int)) {
+            var = std::stoi(input);
+        } else if (var.type() == typeid(double)) {
+            var = std::stod(input);
+        } else {
+            var = input;
+        }
+    } else {
+        variables[stmt->varName] = input;
+    }
 }
 
 
@@ -85,7 +111,7 @@ void Interpreter::handleIf(const IfStatement* stmt) {
     bool isTrue = false;
 
     if (cond.type() == typeid(bool)) isTrue = std::any_cast<bool>(cond);
-    else throw std::runtime_error("Condition must be a boolean");
+    else runtimeError(stmt, "Condition must be a boolean");
 
     if (isTrue) {
         for (const auto& s : stmt->ifBranch) {
@@ -116,22 +142,47 @@ std::any Interpreter::evaluateLiteral(const Literal* expr) {
     if (expr->type == "double") return std::stod(expr->value);
     if (expr->type == "bool") return expr->value == "true";
     if (expr->type == "string") return expr->value;
-    throw std::runtime_error("Unknown literal type: " + expr->type);
+    runtimeError(expr, "Unknown literal type: " + expr->type);
 }
 
 
 std::any Interpreter::evaluateVarExpr(const VarExpr* expr) {
     auto it = variables.find(expr->name);
     if (it == variables.end()) {
-        throw std::runtime_error("Undefined variable: " + expr->name);
+        runtimeError(expr, "Undefined variable: " + expr->name);
     }
     return it->second;
 }
 
 std::any Interpreter::evaluateBinExpr(const BinExpr* expr) {
+    // First evaluate the left operand
     auto left = evaluateExpression(expr->left.get());
+    
+    // Handle unary NOT operator (!)
+    if (expr->op == "!") {
+        if (left.type() == typeid(bool)) {
+            return !std::any_cast<bool>(left);
+        }
+        runtimeError(expr, "NOT operator '!' requires a boolean operand");
+    }
+
+    if (expr->op == "-" && expr->right == nullptr) {
+    if (left.type() == typeid(int)) return -std::any_cast<int>(left);
+    if (left.type() == typeid(double)) return -std::any_cast<double>(left);
+    runtimeError(expr, "Unary minus requires numeric operand.");
+    }
+
+    // For binary operators, evaluate the right operand
     auto right = evaluateExpression(expr->right.get());
 
+    // Helper function to get numeric value as double
+    auto get_as_double = [](const std::any& value) {
+        if (value.type() == typeid(int)) return static_cast<double>(std::any_cast<int>(value));
+        if (value.type() == typeid(double)) return std::any_cast<double>(value);
+        throw std::runtime_error("Numeric value expected");
+    };
+
+    // Integer operations
     if (left.type() == typeid(int) && right.type() == typeid(int)) {
         int l = std::any_cast<int>(left);
         int r = std::any_cast<int>(right);
@@ -139,7 +190,14 @@ std::any Interpreter::evaluateBinExpr(const BinExpr* expr) {
         if (expr->op == "+") return l + r;
         if (expr->op == "-") return l - r;
         if (expr->op == "*") return l * r;
-        if (expr->op == "/") return l / r;
+        if (expr->op == "/") {
+            if (r == 0) runtimeError(expr, "Division by zero");
+            return l / r;  // Integer division
+        }
+        if (expr->op == "mod") {
+            if (r == 0) runtimeError(expr, "Modulo by zero");
+            return l % r;
+        }
         if (expr->op == "==") return l == r;
         if (expr->op == "!=") return l != r;
         if (expr->op == "<") return l < r;
@@ -147,6 +205,80 @@ std::any Interpreter::evaluateBinExpr(const BinExpr* expr) {
         if (expr->op == "<=") return l <= r;
         if (expr->op == ">=") return l >= r;
     }
+    // Double operations
+    else if (left.type() == typeid(double) && right.type() == typeid(double)) {
+        double l = std::any_cast<double>(left);
+        double r = std::any_cast<double>(right);
 
-    throw std::runtime_error("Unsupported binary operation or mismatched types.");
+        if (expr->op == "+") return l + r;
+        if (expr->op == "-") return l - r;
+        if (expr->op == "*") return l * r;
+        if (expr->op == "/") {
+            if (r == 0.0) runtimeError(expr, "Division by zero");
+            return l / r;
+        }
+        if (expr->op == "==") return l == r;
+        if (expr->op == "!=") return l != r;
+        if (expr->op == "<") return l < r;
+        if (expr->op == ">") return l > r;
+        if (expr->op == "<=") return l <= r;
+        if (expr->op == ">=") return l >= r;
+    }
+    // Mixed numeric types (int + double)
+    else if ((left.type() == typeid(int) || left.type() == typeid(double)) &&
+             (right.type() == typeid(int) || right.type() == typeid(double))) {
+        double l = get_as_double(left);
+        double r = get_as_double(right);
+
+        if (expr->op == "+") return l + r;
+        if (expr->op == "-") return l - r;
+        if (expr->op == "*") return l * r;
+        if (expr->op == "/") {
+            if (r == 0.0) runtimeError(expr, "Division by zero");
+            return l / r;
+        }
+        if (expr->op == "==") return l == r;
+        if (expr->op == "!=") return l != r;
+        if (expr->op == "<") return l < r;
+        if (expr->op == ">") return l > r;
+        if (expr->op == "<=") return l <= r;
+        if (expr->op == ">=") return l >= r;
+    }
+    // String concatenation
+    else if (expr->op == "+" && 
+             left.type() == typeid(std::string) && 
+             right.type() == typeid(std::string)) {
+        return std::any_cast<std::string>(left) + std::any_cast<std::string>(right);
+    }
+    // String equality
+    else if ((expr->op == "==" || expr->op == "!=") &&
+             left.type() == typeid(std::string) && 
+             right.type() == typeid(std::string)) {
+        bool equal = std::any_cast<std::string>(left) == std::any_cast<std::string>(right);
+        return expr->op == "==" ? equal : !equal;
+    }
+    // Boolean operations
+    else if (left.type() == typeid(bool) && right.type() == typeid(bool)) {
+        bool l = std::any_cast<bool>(left);
+        bool r = std::any_cast<bool>(right);
+
+        if (expr->op == "and" ) return l && r;
+        if (expr->op == "or" ) return l || r;
+        if (expr->op == "==") return l == r;
+        if (expr->op == "!=") return l != r;
+    }
+
+    runtimeError(expr, "Unsupported operation '" + expr->op + "' for types " + 
+        left.type().name() + " and " + right.type().name());
+}
+
+
+[[noreturn]] void Interpreter::runtimeError(const Statements* stmt, const std::string& msg) {
+    throw std::runtime_error("Runtime Error at line " + std::to_string(stmt->line) + 
+                             ", column " + std::to_string(stmt->column) + ": " + msg);
+}
+
+[[noreturn]] void Interpreter::runtimeError(const Expressions* expr, const std::string& msg) {
+    throw std::runtime_error("Runtime Error at line " + std::to_string(expr->line) + 
+                             ", column " + std::to_string(expr->column) + ": " + msg);
 }

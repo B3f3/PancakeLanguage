@@ -85,6 +85,9 @@ Token Tokeniser::makeIdentifierOrKeyword() {
     if (value == "bool") return Token(TokenType::TYPE_BOOL, value, line, startCol);
     if (value == "true" || value == "false") return Token(TokenType::BOOL_LITERAL, value, line, startCol);
 
+    if (value == "and") return Token(TokenType::AND, value, line, startCol);
+    if (value == "or") return Token(TokenType::OR, value, line, startCol);
+
     return Token(TokenType::IDENTIFIER, value, line, startCol);
 }
 

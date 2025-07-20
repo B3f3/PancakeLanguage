@@ -1,12 +1,10 @@
-let int x = 0;
-let int y = 0;
-let int z = 0;
-out -> "enter a number: ";
-in <- x;
+let int age = 25;
+let bool isStudent = true;
 
-out -> "enter another number: ";
-in <- y;
-
-z = x+y;
-
-out -> x -> "+" -> y -> "=" -> z;
+if (age < 18) {
+    out -> "Junior";
+} elif (isStudent and age > 25) {
+    out -> "Student discount";
+} else {
+    out -> "Regular";
+}

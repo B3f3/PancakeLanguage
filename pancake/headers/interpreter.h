@@ -10,6 +10,7 @@
 #include <memory>
 #include <iostream>
 #include <stdexcept>
+#include <queue>
 
 #include "statements.h"
 #include "expressions.h"
@@ -22,8 +23,8 @@ public:
     void execute(const std::vector<std::unique_ptr<Statements>>& statements);
 
 private:
-    // Variable environment (variable name -> value)
-    std::unordered_map<std::string, std::any> variables;
+    std::unordered_map<std::string, std::any> variables;   // Variable environment (variable name -> value)
+    std::queue<std::any> inputQueue;  // For feeding input in file mode
 
     // Execute a single statement
     void executeStatement(const Statements* stmt);
@@ -42,6 +43,10 @@ private:
     std::any evaluateLiteral(const class Literal* expr);
     std::any evaluateVarExpr(const class VarExpr* expr);
     std::any evaluateBinExpr(const class BinExpr* expr);
+
+    [[noreturn]] void runtimeError(const Statements* stmt, const std::string& msg);
+    [[noreturn]] void runtimeError(const Expressions* expr, const std::string& msg);
+
 };
 
 

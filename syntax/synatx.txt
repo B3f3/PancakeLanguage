@@ -18,14 +18,14 @@ type -> [int, double, string, bool]
 name -> //Must start with a letter or underscore (a-z, A-Z, _) Followed by letters, digits, or underscores
 
 // print and input
-out -> variable ; | out -> "string" -> variable; //prints on same line so have to enter \n
+out -> variable ; | out >> "string" -> variable; //prints on same line so have to enter \n
 in <- variable ;
 
 // if statements
-if (condition) {
+if (condition){
     statement;
 }elif (condition){
     statement;
 }else{
     statement;
-}
+} 

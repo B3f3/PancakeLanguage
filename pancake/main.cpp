@@ -92,7 +92,7 @@ void runConsole() {
             }
             std::cout << "==============\n";
 
-            std::cout << "=== Result ===\n"; */ //The clean debug lines just uncomment the code to use
+            std::cout << "=== Result ===\n";  *///The clean debug lines just uncomment the code to use
             
             interpreter.execute(ast);
             
@@ -107,28 +107,28 @@ void runConsole() {
 
 void runFile(const std::string& filename) {
     std::ifstream file(filename);
+    TypeChecker checker;
+    Interpreter interpreter;
+    
     if (!file) {
         std::cerr << "Error: Could not open file '" << filename << "'\n";
         return;
     }
 
-    TypeChecker checker;
-    Interpreter interpreter;
-    
     try {
+        // Read entire file
         std::ostringstream buffer;
         buffer << file.rdbuf();
         std::string fullSource = buffer.str();
 
+        // Tokenize and parse
         Tokeniser lexer(fullSource);
         lexer.tokenize();
 
         Parser parser(lexer.getTokens(), checker);
         auto ast = parser.parse();
 
-        std::cout << "=== Program Output ===" << std::endl;
         interpreter.execute(ast);
-        std::cout << "=== Execution Complete ===" << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';

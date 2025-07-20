@@ -7,6 +7,8 @@
 
 class Statements : public ASTNodes {        
     public:
+        int line = 0;
+        int column = 0;
         virtual ~Statements() = default;
         virtual void debugPrint(int indent = 0) const = 0;  // ← Add this
 };
