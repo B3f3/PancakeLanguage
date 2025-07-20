@@ -1,0 +1,8 @@
+out > "Hello World" ;
+let int x = 5;
+let int y = 3;
+let bool z = false;
+
+if((x>y) and (!z)){
+    out > "x > y and z = false";
+}

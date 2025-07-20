@@ -57,7 +57,9 @@
         STRING_LITERAL,
         BOOL_LITERAL,
 
-        // End-of-line, End-of-file or invalid
+        // out ENDL and Backslas_n, End-of-line, End-of-file or invalid
+        ENDL,
+        BACKSLAH_N,
         END_OF_LINE,
         END_OF_FILE,
         UNKNOWN

@@ -110,9 +110,9 @@ std::unique_ptr<Statements> Parser::parseOut() {
     std::vector<std::unique_ptr<Expressions>> expressions;
 
     do {
-        consume(TokenType::ARROWF, "Expected '->' after 'out' or expression");
+        consume(TokenType::GT, "Expected '>' after 'out' or expression");
         expressions.push_back(parseExpression());
-    } while (check(TokenType::ARROWF)); // Keep going while more arrows
+    } while (check(TokenType::GT)); // Keep going while more arrows
 
     consume(TokenType::SEMICOLON, "Expected ';' after out statement");
 
@@ -125,10 +125,10 @@ std::unique_ptr<Statements> Parser::parseOut() {
 
 std::unique_ptr<Statements> Parser::parseIn() {
 
-    consume(TokenType::ARROWB, "Expected '<-' after 'in'");
+    consume(TokenType::LT, "Expected '<' after 'in'");
 
     if (peek().type != TokenType::IDENTIFIER)
-        error(peek(), "Expected identifier after '<-' in input statement");
+        error(peek(), "Expected identifier after '<' in input statement");
 
     std::string name = peek().value;
     advance();
@@ -153,8 +153,6 @@ std::unique_ptr<Statements> Parser::parseIf() {
     std::vector<std::unique_ptr<Statements>> ifBranch;
     while (!check(TokenType::RBRACE) && !isAtEnd()) {
         auto stmt = parseStatement();
-        stmt->column = peek().column;
-        stmt->line = peek().line;
         if (stmt) ifBranch.push_back(std::move(stmt));
     }
     consume(TokenType::RBRACE, "Expected '}' after if block");
@@ -170,8 +168,6 @@ std::unique_ptr<Statements> Parser::parseIf() {
         std::vector<std::unique_ptr<Statements>> elifBlock;
         while (!check(TokenType::RBRACE) && !isAtEnd()) {
             auto stmt = parseStatement();
-            stmt->column = peek().column;
-            stmt->line = peek().line;
             if (stmt) elifBlock.push_back(std::move(stmt));
         }
         consume(TokenType::RBRACE, "Expected '}' after 'elif' block");
@@ -185,8 +181,6 @@ std::unique_ptr<Statements> Parser::parseIf() {
         consume(TokenType::LBRACE, "Expected '{' after 'else'");
         while (!check(TokenType::RBRACE) && !isAtEnd()) {
             auto stmt = parseStatement();
-            stmt->column = peek().column;
-            stmt->line = peek().line;
             if (stmt) elseBranch.push_back(std::move(stmt));
         }
         consume(TokenType::RBRACE, "Expected '}' after 'else' block");
@@ -237,22 +231,23 @@ std::unique_ptr<Statements> Parser::parseExpressionStatement() {
 
 
 std::unique_ptr<Expressions> Parser::parseExpression() {
-    if (match(TokenType::NOT)) {
-        Token op = previous(); // capture '!'
-        auto expr = parseExpression();
-        auto unexpression = std::make_unique<UnaryExpr>("!", std::move(expr));
-        unexpression->line = op.line;
-        unexpression->column = op.column;
-        return unexpression;
-    }
-
-    if (match(TokenType::MINUS)) {
-        Token op = previous(); // capture '-'
-        auto expr = parseExpression();
-        auto unexpression = std::make_unique<UnaryExpr>("-", std::move(expr));
-        unexpression->line = op.line;
-        unexpression->column = op.column;
-        return unexpression;
+    // Handle unary operators
+    if (match(TokenType::NOT) || match(TokenType::MINUS)) {
+        Token op = previous(); // capture the operator token
+        auto expr = parseExpression(); // parse the operand
+        
+        // Create the appropriate unary expression
+        if (op.type == TokenType::NOT) {
+            auto unexpr = std::make_unique<UnaryExpr>("!", std::move(expr));
+            unexpr->line = op.line;
+            unexpr->column = op.column;
+            return unexpr;
+        } else { // MINUS
+            auto unexpr = std::make_unique<UnaryExpr>("-", std::move(expr));
+            unexpr->line = op.line;
+            unexpr->column = op.column;
+            return unexpr;
+        }
     }
 
     auto leftHandSide = parsePrimary();
@@ -263,6 +258,14 @@ std::unique_ptr<Expressions> Parser::parseExpression() {
 
 std::unique_ptr<Expressions> Parser::parsePrimary() {
     Token token = peek();
+
+    if (token.type == TokenType::ENDL) {
+        auto lit = std::make_unique<Literal>("endl", "endl");
+        advance();
+        lit->column = token.column;
+        lit->line = token.line;
+        return lit;
+    }
 
     if (token.type == TokenType::INT_LITERAL) {
         std::string value = token.value;

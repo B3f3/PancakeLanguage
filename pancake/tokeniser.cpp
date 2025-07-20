@@ -87,6 +87,7 @@ Token Tokeniser::makeIdentifierOrKeyword() {
 
     if (value == "and") return Token(TokenType::AND, value, line, startCol);
     if (value == "or") return Token(TokenType::OR, value, line, startCol);
+    if (value == "endl") return Token(TokenType::ENDL, value, line, startCol);
 
     return Token(TokenType::IDENTIFIER, value, line, startCol);
 }

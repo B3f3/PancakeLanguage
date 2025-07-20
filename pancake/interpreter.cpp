@@ -19,6 +19,7 @@
 #include "./headers/literal.h"
 #include "./headers/binexrp.h"
 #include "./headers/varexpr.h"
+#include "./headers/unaryexpr.h"
 
 void Interpreter::execute(const std::vector<std::unique_ptr<Statements>>& statements) {
     for (const auto& stmt : statements) {
@@ -41,6 +42,7 @@ std::any Interpreter::evaluateExpression(const Expressions* expr) {
     if (auto* l = dynamic_cast<const Literal*>(expr)) return evaluateLiteral(l);
     if (auto* v = dynamic_cast<const VarExpr*>(expr)) return evaluateVarExpr(v);
     if (auto* b = dynamic_cast<const BinExpr*>(expr)) return evaluateBinExpr(b);
+    if (auto* u = dynamic_cast<const UnaryExpr*>(expr)) return evaluateUnaryExpr(u);  // Add this line
     
     runtimeError(expr, "Unknown expression type.");
 }
@@ -157,20 +159,6 @@ std::any Interpreter::evaluateVarExpr(const VarExpr* expr) {
 std::any Interpreter::evaluateBinExpr(const BinExpr* expr) {
     // First evaluate the left operand
     auto left = evaluateExpression(expr->left.get());
-    
-    // Handle unary NOT operator (!)
-    if (expr->op == "!") {
-        if (left.type() == typeid(bool)) {
-            return !std::any_cast<bool>(left);
-        }
-        runtimeError(expr, "NOT operator '!' requires a boolean operand");
-    }
-
-    if (expr->op == "-" && expr->right == nullptr) {
-    if (left.type() == typeid(int)) return -std::any_cast<int>(left);
-    if (left.type() == typeid(double)) return -std::any_cast<double>(left);
-    runtimeError(expr, "Unary minus requires numeric operand.");
-    }
 
     // For binary operators, evaluate the right operand
     auto right = evaluateExpression(expr->right.get());
@@ -270,6 +258,31 @@ std::any Interpreter::evaluateBinExpr(const BinExpr* expr) {
 
     runtimeError(expr, "Unsupported operation '" + expr->op + "' for types " + 
         left.type().name() + " and " + right.type().name());
+}
+
+std::any Interpreter::evaluateUnaryExpr(const class UnaryExpr* expr) {
+    auto operand = evaluateExpression(expr->getExpr());
+    const std::string& op = expr->getOp();
+
+    if (op == "!") {
+        // Handle logical NOT
+        if (operand.type() == typeid(bool)) {
+            return !std::any_cast<bool>(operand);
+        }
+        runtimeError(expr, "NOT operator '!' requires a boolean operand");
+    }
+    else if (op == "-") {
+        // Handle unary minus
+        if (operand.type() == typeid(int)) {
+            return -std::any_cast<int>(operand);
+        }
+        if (operand.type() == typeid(double)) {
+            return -std::any_cast<double>(operand);
+        }
+        runtimeError(expr, "Unary minus '-' requires a numeric operand");
+    }
+
+    runtimeError(expr, "Unknown unary operator: " + op);
 }
 
 

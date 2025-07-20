@@ -43,6 +43,7 @@ private:
     std::any evaluateLiteral(const class Literal* expr);
     std::any evaluateVarExpr(const class VarExpr* expr);
     std::any evaluateBinExpr(const class BinExpr* expr);
+    std::any evaluateUnaryExpr(const class UnaryExpr* expr);
 
     [[noreturn]] void runtimeError(const Statements* stmt, const std::string& msg);
     [[noreturn]] void runtimeError(const Expressions* expr, const std::string& msg);
